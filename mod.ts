@@ -1,5 +1,5 @@
 import { DOMParser, Element, initParser } from 'https://deno.land/x/deno_dom@v0.1.43/deno-dom-wasm-noinit.ts'
-import { OpenGraphTags, TwitterTags } from './type.d.ts'
+import type { MetaTags, OpenGraphTags, TwitterTags } from './type.d.ts'
 
 async function parse(html: string) {
   await initParser()
@@ -25,7 +25,7 @@ async function fetchAndParseHTML(htmlOrUrl: string) {
  * @param prefix {string} Optional prefix to filter meta tags, e.g. 'og:' or 'twitter:'
  */
 export async function getMetaTags(htmlOrUrl: string, prefix = '') {
-  const returnObj: Record<string, unknown> = {}
+  const returnObj: MetaTags = {}
   const doc = await fetchAndParseHTML(htmlOrUrl)
   const meta = doc.querySelectorAll('meta') as Iterable<Element>
 
@@ -74,3 +74,5 @@ export function getOGTags(htmlOrUrl: string) {
 export function getTwitterTags(htmlOrUrl: string) {
   return getMetaTags(htmlOrUrl, 'twitter:') as Promise<TwitterTags| undefined>
 }
+
+export type { MetaTags, OpenGraphTags, TwitterTags }
