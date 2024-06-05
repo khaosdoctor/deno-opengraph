@@ -1,4 +1,5 @@
 import { DOMParser, Element, initParser } from 'https://deno.land/x/deno_dom@v0.1.43/deno-dom-wasm-noinit.ts'
+import { OpenGraphTags, TwitterTags } from './type.d.ts'
 
 async function parse(html: string) {
   await initParser()
@@ -16,48 +17,6 @@ async function fetchAndParseHTML(htmlOrUrl: string) {
     html = htmlOrUrl
   }
   return parse(html)
-}
-
-type MaybeOpenGraphTags = {
-  title?: string
-  type?: string
-  description?: string
-  site_name?: string
-  locale?: string | { alternate?: string; content: string }
-  image?:
-    | string
-    | {
-        url?: string
-        secure_url?: string
-        type?: string
-        width?: string
-        height?: string
-        alt?: string
-        content: string
-      }
-  url?: string
-  determiner?: string
-  [extraKeys: string]: unknown
-}
-
-type MaybeTwitterTags = {
-  title?: string
-  card?: string
-  site?: string
-  description?: string
-  image?: string
-  image_alt?: string
-  player?: string
-  player_width?: string
-  player_height?: string
-  player_stream?: string
-  app_name?: string
-  app_id_googleplay?: string
-  app_id_iphone?: string
-  app_url_googleplay?: string
-  app_url_iphone?: string
-  app_country?: string
-  [extraKeys: string]: unknown
 }
 
 /**
@@ -105,7 +64,7 @@ export async function getMetaTags(htmlOrUrl: string, prefix = '') {
  * @param htmlOrUrl {string} HTML string or URL to parse, if URL is given it will be fetched
  */
 export function getOGTags(htmlOrUrl: string) {
-  return getMetaTags(htmlOrUrl, 'og:') as Promise<MaybeOpenGraphTags>
+  return getMetaTags(htmlOrUrl, 'og:') as Promise<OpenGraphTags|undefined>
 }
 
 /**
@@ -113,5 +72,5 @@ export function getOGTags(htmlOrUrl: string) {
  * @param htmlOrUrl {string} HTML string or URL to parse, if URL is given it will be fetched
  */
 export function getTwitterTags(htmlOrUrl: string) {
-  return getMetaTags(htmlOrUrl, 'twitter:') as Promise<MaybeTwitterTags>
+  return getMetaTags(htmlOrUrl, 'twitter:') as Promise<TwitterTags| undefined>
 }
