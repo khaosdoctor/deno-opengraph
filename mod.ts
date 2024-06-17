@@ -1,5 +1,5 @@
-import { DOMParser, Element, initParser } from 'https://deno.land/x/deno_dom@v0.1.43/deno-dom-wasm-noinit.ts'
-import type { MetaTags, OpenGraphTags, TwitterTags } from './type.d.ts'
+import { DOMParser, Element, HTMLDocument, initParser } from 'https://deno.land/x/deno_dom@v0.1.43/deno-dom-wasm-noinit.ts'
+import type { MetaTags, OpenGraphTags, TwitterTags } from './type.ts'
 
 async function parse(html: string) {
   await initParser()
@@ -73,6 +73,21 @@ export function getOGTags(htmlOrUrl: string) {
  */
 export function getTwitterTags(htmlOrUrl: string) {
   return getMetaTags(htmlOrUrl, 'twitter:') as Promise<TwitterTags| undefined>
+}
+
+
+export interface MetaTagUrlAndDocument {
+  meta: MetaTags
+  url: URL;
+  document: HTMLDocument;
+}
+
+export async function getMetaTagAndDocument(url: string): Promise<MetaTagUrlAndDocument> {
+  const meta = await getMetaTags(url);
+  if (!meta?.og) console.warn(`Could not get Open Graph tag for ${url}`);
+  const document = await fetchAndParseHTML(url);
+
+  return { meta, url: new URL(url), document};
 }
 
 export type { MetaTags, OpenGraphTags, TwitterTags }

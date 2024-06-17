@@ -66,13 +66,24 @@ export type MetaTags = {
    */
   creator?: string;
   googlebot?: string;
+  bingbot?: string;
   robots?: string;
   publisher?: string;
-
+  "apple-itunes-app"?: string
+  "application-url"?: string
+  
   /**
    * Defined from Open Graph specification
-   */
-  og?: OpenGraphTags;
+  */
+ og?: OpenGraphTags;
+ al?: {
+   android?: string
+   app_name?: string
+   package?: string
+   url?: string
+   ios?: string
+   app_store_id?: string
+ },
   article?: {
     publish_time?: string;
     modified_time?: string;

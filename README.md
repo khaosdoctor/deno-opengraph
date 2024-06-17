@@ -77,6 +77,30 @@ console.log(await getOGTags(html)) // same result
 
 ## Limitations
 
-[OpenGraph](https://ogp.me) is a long specification with several tags, some of them are nested and this lib will try to parse the nested ones so they form a nice object with all the data. However it does only support two levels of nesting. If you find a website with tags such as `og:music:album:disc`, the tag will be parsed incorrectly. This support is planned for the future.
+[OpenGraph](https://ogp.me) is a long specification with several tags, some of them are nested and this lib will try to parse the nested ones so they form a nice object with all the data. However it does only support two levels of nesting. If you find a website with tags such as `og:music:album:disc`, the tag will be parsed incorrectly. For instance, [App Links metadata](https://developers.facebook.com/docs/applinks/metadata-reference/ "Metadata Reference - App Links") with this syntax:
+```html
+<meta property="al:ios:url" content="applinks://docs" />
+<meta property="al:ios:app_store_id" content="12345" />
+<meta property="al:ios:app_name" content="App Links" />
+<meta property="al:android:url" content="applinks://docs" />
+<meta property="al:android:app_name" content="App Links" />
+<meta property="al:android:package" content="org.applinks" />
+<meta property="al:web:url" content="http://applinks.org/documentation" />
+```
+is parsed to this object:
+```ts
+{
+  "al": {
+    "ios": "App Links",
+    "url": "http://applinks.org/documentation",
+    "app_store_id": "12345",
+    "app_name": "App Links",
+    "android": "org.applinks",
+    "package": "org.applinks",
+    "web": "http://applinks.org/documentation"
+  }
+}
+```
+The support for nested tag is planned for the future.
 
 OpenGraph also has support for arrays, but this lib does not support them yet.
