@@ -1,5 +1,5 @@
 import { DOMParser, Element, HTMLDocument, initParser } from 'https://deno.land/x/deno_dom@v0.1.43/deno-dom-wasm-noinit.ts'
-import type { MetaTags, OpenGraphTags, TwitterTags } from './type.ts'
+import type { MetaTags, OpenGraphTags, TwitterTags } from './types.ts'
 
 async function parse(html: string) {
   await initParser()
@@ -24,7 +24,7 @@ async function fetchAndParseHTML(htmlOrUrl: string) {
  * @param htmlOrUrl {string} HTML string or URL to parse, if URL is given it will be fetched
  * @param prefix {string} Optional prefix to filter meta tags, e.g. 'og:' or 'twitter:'
  */
-export async function getMetaTags(htmlOrUrl: string, prefix = '') {
+export async function extractMetaTags(htmlOrUrl: string, prefix = '') {
   const returnObj: MetaTags = {}
   const doc = await fetchAndParseHTML(htmlOrUrl)
   const meta = doc.querySelectorAll('meta') as Iterable<Element>
@@ -63,16 +63,16 @@ export async function getMetaTags(htmlOrUrl: string, prefix = '') {
  * Extracts all Open Graph meta tags from a given HTML string or URL
  * @param htmlOrUrl {string} HTML string or URL to parse, if URL is given it will be fetched
  */
-export function getOGTags(htmlOrUrl: string) {
-  return getMetaTags(htmlOrUrl, 'og:') as Promise<OpenGraphTags|undefined>
+export function extractOGTags(htmlOrUrl: string) {
+  return extractMetaTags(htmlOrUrl, 'og:') as Promise<OpenGraphTags|undefined>
 }
 
 /**
  * Extracts all Twitter meta tags from a given HTML string or URL
  * @param htmlOrUrl {string} HTML string or URL to parse, if URL is given it will be fetched
  */
-export function getTwitterTags(htmlOrUrl: string) {
-  return getMetaTags(htmlOrUrl, 'twitter:') as Promise<TwitterTags| undefined>
+export function extractTwitterTags(htmlOrUrl: string) {
+  return extractMetaTags(htmlOrUrl, 'twitter:') as Promise<TwitterTags| undefined>
 }
 
 
@@ -82,9 +82,9 @@ export interface MetaTagUrlAndDocument {
   document: HTMLDocument;
 }
 
-export async function getMetaTagAndDocument(url: string): Promise<MetaTagUrlAndDocument> {
-  const meta = await getMetaTags(url);
-  if (!meta?.og) console.warn(`Could not get Open Graph tag for ${url}`);
+export async function extractMetaTagAndDocument(url: string): Promise<MetaTagUrlAndDocument> {
+  const meta = await extractMetaTags(url);
+  if (!meta?.og) console.warn(`Could not extract Open Graph tag for ${url}`);
   const document = await fetchAndParseHTML(url);
 
   return { meta, url: new URL(url), document};

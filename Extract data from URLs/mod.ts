@@ -1,153 +1,88 @@
-import { parse } from 'npm:tldts'
-import {
-	FacebookEvent,
-	FacebookGroup,
-	FacebookPage,
-	FacebookProfile,
-	parseFacebookURL,
-} from './Facebook.ts'
-import { MetaTagUrlAndDocument, getMetaTagAndDocument } from '../mod.ts'
+import { parse } from "npm:tldts";
+import { MetaTagUrlAndDocument } from '../mod.ts'
+import { FacebookGroup, FacebookEvent, extractFacebookInfo, FacebookPage, FacebookProfile } from "./Facebook.ts";
+import { GitHubOrgOrRepo, extractGitHubInfo, extractYouTubeInfo } from "./Social media.ts";
+import { DiscordServer, extractDiscordInfo } from "./Chat.ts";
+import { NotionDatabase, extractGoogleInfo, extractNotionInfo, NotionWorkspace } from "./SaaS.ts";
+import { WebsiteInfoBase, extractRegularWebsiteInfo } from './Regular websites.ts'
 
-export interface GitHubBase {
-	name?: string
-	slug?: string
-	avatar?: string
-	description?: string
-}
-interface GitHub {
-	Org?: GitHubBase
-	Repo?: GitHubBase
-}
+const socialMediaList = [
+  "Facebook", "LinkedIn",
+  "Twitter", "Mastodon",
+  "YouTube", "TikTok",
+  "Instagram", "Pinterest",
+  "Reddit", "Stack Exchange", "Quora", "Tinh tế", "Spiderum", "Medium",
+  "GitHub", "GitLab",
+  "Zalo",
+] as const
 
-export function parseGitHubURL({ meta, url, document }: MetaTagUrlAndDocument): GitHub {
-	const htmlTitle = document.querySelector('title')?.textContent
-	const htmlTitleSplit = htmlTitle?.split(/ - /g) || []
-	let name
-	if (htmlTitleSplit[1] === 'GitHub') {
-		name = meta.og?.title
-		return {
-			Org: {
-				name: name,
-				description: meta.og?.description?.replace(` - ${name}`, ''),
-				slug: url.pathname.slice(1),
-				avatar: meta.twitter?.image,
-			},
-		}
-	}
-	name = htmlTitleSplit[1]
-	return {
-		Repo: {
-			name: name,
-			description: meta.og?.description?.replace(` - ${name}`, ''),
-			slug: url.pathname.slice(1),
-			avatar: meta.twitter?.image,
-		},
-	}
-}
-export function parseYouTubeURL({ meta, url }: MetaTagUrlAndDocument) {
-	const pathname = url.pathname
-	const isChannel = pathname.startsWith('/@') || pathname.startsWith('/channel')
-	const isPlaylist = pathname.includes('playlist')
+const chatList = [
+  "Messenger",
+  "Discord",
+  "Telegram",
+  "Zalo",
+  "Viber",
+  "Reddit",
+  "LinkedIn",
+] as const;
 
-	if (isChannel) {
-		return {
-			Channel: {
-				name: meta.og?.title,
-				description: meta.og?.description,
-				avatar: meta.twitter?.image,
-			},
-		}
-	}
-	if (isPlaylist) {
-		return {
-			Playlist: {
-				name: meta.og?.title,
-				description: meta.og?.description,
-				avatar: meta.twitter?.image,
-			},
-		}
-	}
-	return {
-		Video: {
-			name: meta.og?.title,
-			description: meta.og?.description,
-		},
-	}
+const SaaSList = ["Google", "Zoom", "Notion"] as const;
+
+type PlatformType = "Social media" | "Chat" | "SaaS" | "Website" 
+export interface UrlInfo{
+  platformName: string;
+  platformType: PlatformType;
+
+  group?: FacebookGroup;
+  page?: FacebookPage;
+  profile?: FacebookProfile;
+  event?: FacebookEvent;
+
+  Org?: GitHubOrgOrRepo;
+  Repo?: GitHubOrgOrRepo;
+
+  server?: DiscordServer;
+
+  database?: NotionDatabase;
+  workspace?: NotionWorkspace;
+
+  "homepage"?: WebsiteInfoBase;
+  "post"?: WebsiteInfoBase;
 }
 
-interface DiscordServer {
-	name: string | undefined
+function identifyPlatformNameAndTypeFromUrl(metaTagUrlAndDocument: MetaTagUrlAndDocument): [string, PlatformType] {
+  const domainNameWithoutSuffix = parse(metaTagUrlAndDocument.url.href).domainWithoutSuffix;
+  if ((socialMediaList as unknown as string[]).includes(domainNameWithoutSuffix)) return [domainNameWithoutSuffix, "Social media"];
+  if ((chatList as unknown as string[]).includes(domainNameWithoutSuffix)) return [domainNameWithoutSuffix, "Chat"];
+  if ((SaaSList as unknown as string[]).includes(domainNameWithoutSuffix)) return [domainNameWithoutSuffix, "SaaS"];
+  return ["Website", "Website"];
 }
 
-interface Discord {
-	Server: DiscordServer
-}
+export default function extractUrlInfo(metaTagUrlAndDocument: MetaTagUrlAndDocument): UrlInfo{
+  const [platformName, platformType] = identifyPlatformNameAndTypeFromUrl(metaTagUrlAndDocument);
+  const category = getCategory();
+  return {
+    platformName: platformName,
+    platformType: platformType,
+    ...category,
+  };
 
-export function parseDiscordURL({ document }: MetaTagUrlAndDocument): Discord {
-	return {
-		Server: {
-			name: document.querySelector('title')?.textContent,
-		},
-	}
-}
-
-export function parseRegularWebsite(metaTagUrlAndDocument: MetaTagUrlAndDocument) {
-	const { meta, document, url } = metaTagUrlAndDocument
-	const { pathname } = url
-	const htmlTitle = document.querySelector('title')?.textContent
-	const htmlTitleSplit = htmlTitle?.split(' - ')
-	const metaTitle = meta.og?.title
-
-	if (pathname === '/') {
-		return {
-			Homepage: {
-				name: meta.og?.site_name || htmlTitleSplit?.[1].trim() || metaTitle,
-				description: meta.og?.description || meta?.description || document.querySelector('p')?.textContent,
-				image: meta.og?.image,
-			},
-		}
-	}
-	return {
-		Post: {
-			name: metaTitle || htmlTitleSplit?.[0].trim(),
-			description: meta.og?.description || meta?.description ||
-				document.querySelector('p')?.textContent,
-			image: meta.og?.image,
-		},
-	}
-}
-
-export interface URLInfo {
-	platform: string
-	Group?: FacebookGroup
-	Page?: FacebookPage
-	Profile?: FacebookProfile
-	Event?: FacebookEvent
-
-	Org?: GitHubBase
-	Repo?: GitHubBase
-
-	Server?: DiscordServer
-}
-
-export async function extractInfoFromURL(url: string): Promise<URLInfo> {
-  const metaTagUrlAndDocument = await getMetaTagAndDocument(url) 
-	const platform = parse(metaTagUrlAndDocument.url.href).domainWithoutSuffix
-	const category = getCategory()
-	return { platform: platform, ...category }
-
-	function getCategory() {
-		switch (platform) {
-			case 'facebook':
-				return parseFacebookURL(metaTagUrlAndDocument)
-			case 'github':
-				return parseGitHubURL(metaTagUrlAndDocument)
-			case 'youtube':
-				return parseYouTubeURL(metaTagUrlAndDocument)
-			case 'discord':
-				return parseDiscordURL(metaTagUrlAndDocument)
-			default:
-				return parseRegularWebsite(metaTagUrlAndDocument)
-		}
-	}
+  function getCategory() {
+    switch (platformName) {
+      case "Facebook":
+        return extractFacebookInfo(metaTagUrlAndDocument);
+      case "GitHub":
+        return extractGitHubInfo(metaTagUrlAndDocument);
+      case "YouTube":
+        return extractYouTubeInfo(metaTagUrlAndDocument);
+      case "Discord":
+        return extractDiscordInfo(metaTagUrlAndDocument);
+      case "Notion":
+        return extractNotionInfo(metaTagUrlAndDocument);
+      case "Google":
+        return extractGoogleInfo(metaTagUrlAndDocument);
+      default:
+        return extractRegularWebsiteInfo(metaTagUrlAndDocument);
+    }
+  }
 }
