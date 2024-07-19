@@ -56,6 +56,11 @@ export async function extractMetaTags(htmlOrUrl: string, prefix: string = '') {
     }
   }
 
+  // Title is a special case since it's not a meta tag
+  if (doc.title && !prefix) {
+    returnObj.title = doc.title
+  }
+
   return returnObj
 }
 
