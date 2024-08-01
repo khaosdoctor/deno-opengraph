@@ -24,7 +24,7 @@ async function fetchAndParseHTML(htmlOrUrl: string) {
  * @param htmlOrUrl {string} HTML string or URL to parse, if URL is given it will be fetched
  * @param prefix {string} Optional prefix to filter meta tags, e.g. 'og:' or 'twitter:'
  */
-export async function extractMetaTags(htmlOrUrl: string, prefix: string = '') {
+export async function extractMetaTags(htmlOrUrl: string, prefix = '') {
   const returnObj: MetaTags = {}
   const doc = await fetchAndParseHTML(htmlOrUrl)
   const meta = doc.querySelectorAll('meta') as Iterable<Element>
