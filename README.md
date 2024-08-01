@@ -78,6 +78,7 @@ console.log(await getOGTags(html)) // same result
 ## Limitations
 
 [OpenGraph](https://ogp.me) is a long specification with several tags, some of them are nested and this lib will try to parse the nested ones so they form a nice object with all the data. However it does only support two levels of nesting. If you find a website with tags such as `og:music:album:disc`, the tag will be parsed incorrectly. For instance, [App Links metadata](https://developers.facebook.com/docs/applinks/metadata-reference/ "Metadata Reference - App Links") with this syntax:
+
 ```html
 <meta property="al:ios:url" content="applinks://docs" />
 <meta property="al:ios:app_store_id" content="12345" />
@@ -87,6 +88,7 @@ console.log(await getOGTags(html)) // same result
 <meta property="al:android:package" content="org.applinks" />
 <meta property="al:web:url" content="http://applinks.org/documentation" />
 ```
+
 is parsed to this object:
 ```ts
 {
