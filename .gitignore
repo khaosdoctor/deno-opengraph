@@ -1,3 +1,6 @@
+#Ignore the extended module in current PR. Will remove this line in the next PR
+Extract data* 
+
 # Logs
 logs
 *.log
@@ -187,7 +190,8 @@ $RECYCLE.BIN/
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
